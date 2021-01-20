@@ -7,7 +7,7 @@
             <TodoInput v-on:addTodo="addTodo"></TodoInput>
         </div>
         <div>
-            <TodoList :todoItems="todoItemsReverse"></TodoList>
+            <TodoList :todoItems="todoItemsReverse" v-on:changeState="changeState" v-on:deleteTodo="deleteTodo"></TodoList>
         </div>
     </div>
 </div>
@@ -18,6 +18,7 @@
     import TodoInput from './components/TodoInput.vue';
     import TodoList from './components/TodoList.vue';
     import moment from 'moment'
+    import { v1 as uuidv1 } from 'uuid';
 
     export default {
         data() {
@@ -33,15 +34,36 @@
                 }
             },
             addTodo(newTodoItem) {
-                console.log(moment().format('MMMM Do YYYY, h:mm:ss a'));
-                return;
                 if (newTodoItem) {
                     this.todoItems.push({
-                        'todo': newTodoItem.trim(),
-                        'state': 'ing',
+                        todo: newTodoItem.trim(),
+                        state: 'ing',
+                        date: moment().format('YYYYMMDDHmmss'),
+                        id: uuidv1(),
                     });
-                    localStorage.setItem('todoItems', JSON.stringify(this.todoItems));
+                    this.storageSave(this.todoItems);
                 }
+            },
+            changeState(todoItem, state) {
+                this.todoItems.map((item) => {
+                    if (todoItem.id === item.id) {
+                        item.state = state;
+                    } 
+                });
+                this.storageSave(this.todoItems);
+            },
+            storageSave(todoItems) {
+                localStorage.setItem('todoItems', JSON.stringify(todoItems));
+            },
+            deleteTodo(todoItem) {
+                const newTodoItem = this.todoItems.filter((item, index) => {
+                    return item.id !== todoItem.id
+                });
+                this.setTodoItems(newTodoItem);
+                this.storageSave(newTodoItem);
+            },
+            setTodoItems(todoItems) {
+                this.todoItems = todoItems;
             }
         },
         created() {
